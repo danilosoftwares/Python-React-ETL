@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+peewee
+asyncpg
+pandas
+httpx
+python-multipart
+psycopg2-binary
+pika
+aio_pika

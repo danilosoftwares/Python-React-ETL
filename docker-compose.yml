@@ -1,0 +1,95 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"    
+      - "15672:15672"  
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbit_user
+      RABBITMQ_DEFAULT_PASS: rabbit_password
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5      
+      
+  db:
+    image: postgres:14
+    restart: always
+    container_name: mydb    
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: products_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5      
+
+  api:
+    build:
+      context: .
+      dockerfile: dockerfile-backend
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: password
+        POSTGRES_DATABASE: products_db     
+        POSTGRES_HOST: mydb   
+        TOPIC_RABBIT: products
+        RABBIT_USER: rabbit_user
+        RABBIT_PASSWORD: rabbit_password
+        RABBIT_HOST: rabbitmq            
+    volumes:
+      - ./backend:/code/backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    restart: always                 
+
+  consumer:
+    build:
+      context: .
+      dockerfile: dockerfile-backend
+    command: python ./backend/app/consumer.py
+    environment:
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: password
+        POSTGRES_DATABASE: products_db     
+        POSTGRES_HOST: mydb   
+        TOPIC_RABBIT: products
+        RABBIT_USER: rabbit_user
+        RABBIT_PASSWORD: rabbit_password    
+        RABBIT_HOST: rabbitmq    
+    volumes:
+      - ./backend:/code/backend
+    depends_on:
+      - db     
+      - rabbitmq  
+      - api           
+    restart: always               
+
+  cdn:
+    build:
+      context: .
+      dockerfile: dockerfile-frontend
+    container_name: react_cdn
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend/nginx/nginx.conf:/etc/nginx/conf.d/custom.conf:ro      
+    depends_on:
+      - api          
+
+volumes:
+  postgres_data:
+  

@@ -1,0 +1,14 @@
+# Ignora o cache do Node e dependências locais do frontend
+frontend/node_modules
+
+# Ignora arquivos e pastas comuns que não são necessários no container
+*.log
+__pycache__/
+*.pyc
+.env
+.DS_Store
+.vscode
+.idea
+*.sqlite3
+*.db
+**/node_modules
