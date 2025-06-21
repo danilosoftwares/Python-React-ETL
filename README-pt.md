@@ -13,6 +13,8 @@ O objetivo principal da aplicação é realizar **importações de arquivos CSV 
 
 ---
 
+![](flow.svg)
+
 ## 🛠️ Tecnologias Utilizadas
 
 ### 1. Backend (Python)

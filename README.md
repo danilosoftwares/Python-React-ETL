@@ -13,6 +13,8 @@ The main goal of the application is to **import large CSV files**, with more tha
 
 ---
 
+![](flow.svg)
+
 ## 🛠️ Technologies Used
 
 ### 1. Backend (Python)
